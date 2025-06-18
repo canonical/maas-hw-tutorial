@@ -1,4 +1,4 @@
-# MAAS Hardware Tutorial: Deploying to a Mini-PC or NUC
+# MAAS Hardware Tutorial: Deploying a NUC
 
 This is an early-stage tutorial designed to help you deploy real hardware — like a Mini-PC, NUC, or even a sufficiently capable laptop — using [MAAS](https://maas.io). It’s meant as a **proof-of-concept**, not a product-grade solution. That said, it can work surprisingly well on low-cost hardware with a little setup.
 
@@ -23,17 +23,17 @@ That said, here’s what you *do* need:
 
 ---
 
-## 2. Connect Your Device to the MAAS Network
+## 2. Connect your device to the MAAS network
 
 Connect your hardware to the **same physical Ethernet network** where your MAAS region/rack controller resides (or will reside). This is the same machine you'll be installing MAAS on, or one directly reachable from it. Do this **before** worrying about the MAAS install — you'll need physical access anyway.
 
 ---
 
-## 3. Enter the BIOS and Configure Boot
+## 3. Enter the BIOS and configure boot
 
 You’ll need to access the BIOS or UEFI firmware setup screen to enable PXE boot.
 
-### 🛠️ How to Enter the BIOS
+### 🛠️ How to enter the BIOS
 The exact key to press depends on your hardware, but common options include:
 
 - **F2**, **F10**, **F12**, **Delete**, or **Esc**
@@ -44,26 +44,26 @@ To find the right key for your device:
 
 **Tip:** Start tapping the key repeatedly as soon as the machine powers on.
 
-### ⚙️ What to Change in the BIOS
+### ⚙️ What to change in the BIOS
 
-1. **Set PXE as the first boot source**
+- **Set PXE as the first boot source**
    - Usually under *Boot Options* or *Boot Order*
    - Enable PXE/Network boot if it’s not already available
 
-2. **Disable Secure Boot** (optional but recommended)
+- **Disable Secure Boot** (optional but recommended)
    - Some PXE environments won't boot with Secure Boot enabled
 
-3. **Enable Wake-on-LAN** (WOL)
+- **Enable Wake-on-LAN** (WOL)
    - Found under *Power Management*, *Advanced*, *Network*, or *Chipset...* sections
    - This allows MAAS or another system to power on the device remotely via its MAC address
 
-4. **Enable S5/G0 Power State Restart**
+- **Enable S5/G0 Power State Restart**
    - This setting ensures the machine powers back on automatically if it loses power and then regains it (e.g., via smart plug or PDU)
    - Look for options like “AC Power Recovery,” “Power On After Power Fail,” or “Restore Power State”
 
 ---
 
-## 🔌 What If There's No BMC?
+## 🔌 What if there's no BMC?
 
 MAAS ideally manages power through a BMC (Baseboard Management Controller), but most cheap Mini-PCs or NUCs **don’t have one**. In that case:
 
@@ -77,7 +77,7 @@ You’ll need a way to power the system on automatically:
 
 ---
 
-## 4. Initial MAAS Setup
+## 4. Initial MAAS setup
 
 Install MAAS (Snap recommended) on a physical machine you'll use as your **region/rack controller**:
 
@@ -92,7 +92,7 @@ sudo snap install maas --channel=3.4/stable
 
 ---
 
-## 5. Monitor MAAS Logs in Real-Time
+## 5. Monitor MAAS logs in real-time
 
 Tail MAAS activity with helpful filters and save to a local file:
 ```bash
@@ -101,12 +101,12 @@ sudo journalctl -f | grep --color=auto -i maas | tee /tmp/maas-tail.log
 
 ---
 
-## 6. PXE Boot Test (Without DHCP)
+## 6. PXE boot test (without DHCP)
 
-1. Power on your new machine (NUC, Mini-PC, etc.)
-2. It should try PXE boot, then stall at the PXE screen
+- Power on your new machine (NUC, Mini-PC, etc.)
+- It should try PXE boot, then stall at the PXE screen
    - This is expected, because MAAS isn’t serving DHCP yet
-3. Power the machine off manually
+- Power the machine off manually
 
 ---
 
@@ -119,16 +119,16 @@ In the MAAS UI:
 
 ---
 
-## 8. Commission the Machine
+## 8. Commission the machine
 
-1. Power the machine back on
-2. It should now boot via PXE and start being provisioned
-3. In your MAAS logs you should see it obtain an IP
-4. The console will show a commissioning sequence
-5. It may fail the first time due to missing `metadata.maas` resolution
-6. Fix this by ensuring your DHCP points to MAAS for DNS
+- Power the machine back on
+- It should now boot via PXE and start being provisioned
+- In your MAAS logs you should see it obtain an IP
+- The console will show a commissioning sequence
+- It may fail the first time due to missing `metadata.maas` resolution
+- Fix this by ensuring your DHCP points to MAAS for DNS
 
-### Reboot, Retry, Commission
+### Reboot, retry, commission
 - After correcting DNS, reboot the machine again
 - It should appear in MAAS as a "New" machine with "Unknown" power type
 
@@ -141,11 +141,11 @@ In the MAAS UI:
 
 ---
 
-## 9. Deploy the Machine via CLI
+## 9. Deploy the machine via CLI
 
-a. In MAAS UI, **allocate the machine**
-b. Get the machine system ID (from URL or list view)
-c. On your MAAS server:
+- In MAAS UI, **allocate the machine**
+- Get the machine system ID (from URL or list view)
+- On your MAAS server:
 
 ```bash
 # Generate your API key
@@ -158,11 +158,11 @@ maas login $PROFILE $MAAS_URL $API_KEY
 maas $PROFILE machine deploy $SYSTEM_ID distro_series=ubuntu/jammy
 ```
 
-d. Power on the machine
-e. Monitor logs; reboot will happen automatically
-f. Machine status should become **Deployed**
+- Power on the machine
+- Monitor logs; reboot will happen automatically
+- Machine status should become **Deployed**
 
-### Verify Deployment:
+### Verify deployment:
 ```bash
 ssh ubuntu@$ASSIGNED_IP
 lsblk
@@ -171,7 +171,7 @@ cd / && ls
 
 ---
 
-## 8. Automation Scripts (Optional)
+## 8. Automation scripts (Optional)
 
 If you have a smart plug or network PDU, you can automate power control.  And you'll find these scripts in the repo, as well, so no hurry to type them in.
 
@@ -215,5 +215,3 @@ maas $PROFILE machine release $SYSTEM_ID
 ## ✅ Success!
 You just deployed a thrift-store Mini-PC with MAAS—on real hardware, no cloud required.
 Now go build your lab, cluster, or infrastructure-on-a-budget.
-
-

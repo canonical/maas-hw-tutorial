@@ -25,7 +25,7 @@ That said, here’s what you *do* need:
 
 ## 2. Connect Your Device to the MAAS Network
 
-Connect your hardware to the **same physical Ethernet network** where your MAAS region/rack controller resides (or will reside). This is the same machine you'll be installing MAAS on, or one directly reachable from it. Do this **before** worrying about the MAAS install—you'll need physical access anyway.
+Connect your hardware to the **same physical Ethernet network** where your MAAS region/rack controller resides (or will reside). This is the same machine you'll be installing MAAS on, or one directly reachable from it. Do this **before** worrying about the MAAS install — you'll need physical access anyway.
 
 ---
 
@@ -54,7 +54,7 @@ To find the right key for your device:
    - Some PXE environments won't boot with Secure Boot enabled
 
 3. **Enable Wake-on-LAN** (WOL)
-   - Found under *Power Management*, *Advanced*, or *Network* sections
+   - Found under *Power Management*, *Advanced*, *Network*, or *Chipset...* sections
    - This allows MAAS or another system to power on the device remotely via its MAC address
 
 4. **Enable S5/G0 Power State Restart**
@@ -77,5 +77,143 @@ You’ll need a way to power the system on automatically:
 
 ---
 
-Next step: we’ll walk through installing MAAS, importing boot resources, and deploying your first device.
+## 4. Initial MAAS Setup
+
+Install MAAS (Snap recommended) on a physical machine you'll use as your **region/rack controller**:
+
+```bash
+sudo snap install maas --channel=3.4/stable
+```
+
+### Recommended early settings:
+- Set DNS to `8.8.8.8` to avoid resolution issues during image import
+- Import Ubuntu 22.04 LTS (Jammy) under Images → OS selection
+- **Do NOT enable DHCP yet** — this will break your LAN if done prematurely
+
+---
+
+## 5. Monitor MAAS Logs in Real-Time
+
+Tail MAAS activity with helpful filters and save to a local file:
+```bash
+sudo journalctl -f | grep --color=auto -i maas | tee /tmp/maas-tail.log
+```
+
+---
+
+## 6. PXE Boot Test (Without DHCP)
+
+1. Power on your new machine (NUC, Mini-PC, etc.)
+2. It should try PXE boot, then stall at the PXE screen
+   - This is expected, because MAAS isn’t serving DHCP yet
+3. Power the machine off manually
+
+---
+
+## 7. Enable DHCP in MAAS
+
+In the MAAS UI:
+- Go to **Subnets → 192.168.x.x/24** (or your actual subnet)
+- Click **Edit DHCP**
+- Set **DNS to your region controller IP** (e.g., `192.168.1.134`)
+
+---
+
+## 8. Commission the Machine
+
+1. Power the machine back on
+2. It should now boot via PXE and start being provisioned
+3. In your MAAS logs you should see it obtain an IP
+4. The console will show a commissioning sequence
+5. It may fail the first time due to missing `metadata.maas` resolution
+6. Fix this by ensuring your DHCP points to MAAS for DNS
+
+### Reboot, Retry, Commission
+- After correcting DNS, reboot the machine again
+- It should appear in MAAS as a "New" machine with "Unknown" power type
+
+### Steps:
+- Change power type to **Manual**
+- Choose **Start Commissioning**, check **Allow SSH, prevent power off**
+- Power on the machine manually
+- UI will show the full commissioning progress
+- Result: Machine status becomes **Ready**
+
+---
+
+## 9. Deploy the Machine via CLI
+
+a. In MAAS UI, **allocate the machine**
+b. Get the machine system ID (from URL or list view)
+c. On your MAAS server:
+
+```bash
+# Generate your API key
+sudo maas apikey --username $PROFILE --generate
+
+# Log in via CLI
+maas login $PROFILE $MAAS_URL $API_KEY
+
+# Deploy to Ubuntu 22.04 (jammy)
+maas $PROFILE machine deploy $SYSTEM_ID distro_series=ubuntu/jammy
+```
+
+d. Power on the machine
+e. Monitor logs; reboot will happen automatically
+f. Machine status should become **Deployed**
+
+### Verify Deployment:
+```bash
+ssh ubuntu@$ASSIGNED_IP
+lsblk
+cd / && ls
+```
+
+---
+
+## 8. Automation Scripts (Optional)
+
+If you have a smart plug or network PDU, you can automate power control.  And you'll find these scripts in the repo, as well, so no hurry to type them in.
+
+### `turn-on-machine.sh`
+```bash
+#!/bin/bash
+curl http://$PDU_IP/relay/0?turn=on
+```
+
+### `turn-off-machine.sh`
+```bash
+#!/bin/bash
+curl http://$PDU_IP/relay/0?turn=off
+```
+
+### `commission-machine.sh`
+```bash
+#!/bin/bash
+maas $PROFILE machine commission $SYSTEM_ID
+./turn-on-machine.sh
+sleep 4.2m
+./turn-off-machine.sh
+```
+
+### `deploy-machine.sh`
+```bash
+#!/bin/bash
+maas $PROFILE machine deploy $SYSTEM_ID distro_series=ubuntu/jammy
+./turn-on-machine.sh
+```
+
+### `release-machine.sh`
+```bash
+#!/bin/bash
+./turn-off-machine.sh
+maas $PROFILE machine release $SYSTEM_ID
+```
+
+---
+
+## ✅ Success!
+You just deployed a thrift-store Mini-PC with MAAS—on real hardware, no cloud required.
+Now go build your lab, cluster, or infrastructure-on-a-budget.
+
 

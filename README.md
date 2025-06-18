@@ -213,5 +213,5 @@ maas $PROFILE machine release $SYSTEM_ID
 ---
 
 ## ✅ Success!
-You just deployed a thrift-store Mini-PC with MAAS—on real hardware, no cloud required.
+You just deployed a thrift-store Mini-PC with MAAS — on real hardware, no cloud required.
 Now go build your lab, cluster, or infrastructure-on-a-budget.

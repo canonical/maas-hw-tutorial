@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+# replace $PROFILE with the name of your admin user
+# replace the $SYSTEM_ID with the sysid of your target machine
+
+turn-off-pdu
+maas admin machine release rnkqsf
+
+

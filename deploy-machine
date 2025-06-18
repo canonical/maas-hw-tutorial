@@ -1,0 +1,9 @@
+#!/bin/bash -x
+
+set -e
+
+# replace $PROFILE with the name of your admin user
+# replace the $SYSTEM_ID with the sysid of your target machine
+
+maas admin machine deploy rnkqsf distro_series=ubuntu/jammy
+turn-on-pdu

@@ -1,0 +1,14 @@
+#!/bin/bash -x
+
+set -e
+
+# replace $PROFILE with the name of your admin user
+# replace the $SYSTEM_ID with the sysid of your target machine
+# adjust the sleep time (default 4.2m) if it's too long or too short
+
+maas admin machine commission rnkqsf
+turn-on-pdu
+sleep 4.2m
+turn-pdu-off
+
+

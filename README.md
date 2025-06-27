@@ -6,6 +6,12 @@ This is an early-stage tutorial designed to help you deploy real hardware — li
 
 ---
 
+## What we're building
+
+![image](https://github.com/user-attachments/assets/b691dcfd-dbe6-40df-beed-3d20bc4ebb5c)
+
+---
+
 ## 1. Requirements
 
 This tutorial doesn't assume any one device model. Whether you're using a Mini-PC, a small-form-factor desktop, or an old laptop with PXE support and a decent BIOS, you're good to go. Don’t get hung up on the term "NUC."
